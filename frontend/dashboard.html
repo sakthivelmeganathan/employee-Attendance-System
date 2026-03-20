@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Attendance Tracker</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container dashboard-container">
+        <div class="header">
+            <div>
+                <h1 id="welcome-msg">Hi, User</h1>
+                <p class="subtitle">Here's your attendance overview</p>
+            </div>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+
+        <div class="actions">
+            <button id="checkin-btn" onclick="checkIn()">Check In</button>
+            <button id="checkout-btn" onclick="checkOut()" style="background: #f59e0b;">Check Out</button>
+        </div>
+
+        <div class="card">
+            <h3>Recent History</h3>
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Check In</th>
+                        <th>Check Out</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="history-body">
+                    <!-- Data will be populated by JS -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        // Check if logged in
+        if (!localStorage.getItem('token')) {
+            window.location.href = 'login.html';
+        }
+        loadUserData();
+        loadHistory();
+    </script>
+</body>
+
+</html>

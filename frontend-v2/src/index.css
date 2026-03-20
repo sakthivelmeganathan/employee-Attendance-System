@@ -1,0 +1,140 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+:root {
+  --primary: #4f46e5;
+  /* Indigo-600 */
+  --primary-hover: #4338ca;
+  --accent: #6366f1;
+  --background: #f8fafc;
+  /* Slate-50 */
+  --card-bg: #ffffff;
+  --text-main: #0f172a;
+  /* Slate-900 */
+  --text-muted: #64748b;
+  /* Slate-500 */
+  --border: #e2e8f0;
+  --ring: rgba(79, 70, 229, 0.1);
+}
+
+.dark {
+  --background: #020617;
+  --card-bg: #0f172a;
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --border: #1e293b;
+}
+
+@theme {
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-accent: var(--accent);
+  --color-bg-base: var(--background);
+  --color-card-base: var(--card-bg);
+  --color-text-main: var(--text-main);
+  --color-text-muted: var(--text-muted);
+  --color-border-base: var(--border);
+}
+
+body {
+  @apply bg-bg-base text-text-main min-h-screen antialiased;
+  font-family: 'Inter', sans-serif;
+  position: relative;
+}
+
+/* Base decorative background */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(79, 70, 229, 0.03) 0%, transparent 40%),
+    radial-gradient(circle at 100% 100%, rgba(99, 102, 241, 0.03) 0%, transparent 40%);
+  z-index: -1;
+  pointer-events: none;
+}
+
+@layer components {
+  .standard-card {
+    @apply bg-card-base border border-border-base rounded-xl shadow-sm overflow-hidden transition-all hover:shadow-md;
+  }
+
+  .card-header {
+    @apply p-6 border-b border-border-base;
+  }
+
+  .card-title {
+    @apply text-lg font-semibold tracking-tight text-text-main;
+  }
+
+  .stat-value {
+    @apply text-3xl font-bold text-text-main;
+  }
+
+  .btn-primary {
+    @apply bg-primary hover:bg-primary-hover text-white px-6 py-2.5 rounded-lg font-medium transition-all shadow-sm active:scale-95 flex items-center justify-center gap-2;
+  }
+
+  .btn-secondary {
+    @apply bg-white border border-border-base text-text-main hover:bg-slate-50 px-6 py-2.5 rounded-lg font-medium transition-all shadow-sm active:scale-95 flex items-center justify-center gap-2;
+  }
+
+  .form-input {
+    @apply w-full px-4 py-2.5 bg-card-base border border-border-base rounded-lg text-sm text-text-main focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all placeholder:text-text-muted/50;
+  }
+
+  .form-input:disabled {
+    @apply bg-bg-base cursor-not-allowed opacity-70;
+  }
+
+  .glass-effect {
+    @apply bg-white/70 dark:bg-slate-900/70 backdrop-blur-md border border-white/20 dark:border-slate-800/20 shadow-xl;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite linear;
+}
+
+@keyframes slow-pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.8;
+    transform: scale(0.98);
+  }
+}
+
+.animate-slow-pulse {
+  animation: slow-pulse 3s infinite ease-in-out;
+}
+
+/* Custom scrollbar for medical feel */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-300 rounded-full hover:bg-slate-400;
+}

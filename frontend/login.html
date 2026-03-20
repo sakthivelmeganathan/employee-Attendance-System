@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Attendance Tracker</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container" id="login-container">
+        <h1>Welcome Back</h1>
+        <p class="subtitle">Please enter your details to login</p>
+        
+        <form id="login-form">
+            <div class="input-group">
+                <label>Email Address</label>
+                <input type="email" id="email" placeholder="name@company.com" required>
+            </div>
+            <div class="input-group">
+                <label>Password</label>
+                <input type="password" id="password" placeholder="••••••••" required>
+            </div>
+            <button type="submit">Log In</button>
+        </form>
+
+        <div class="auth-footer">
+            Don't have an account? <a href="#" onclick="toggleAuth()">Sign up</a>
+        </div>
+    </div>
+
+    <div class="container" id="register-container" style="display: none;">
+        <h1>Create Account</h1>
+        <p class="subtitle">Join the attendance system today</p>
+        
+        <form id="register-form">
+            <div class="input-group">
+                <label>Full Name</label>
+                <input type="text" id="reg-name" placeholder="John Doe" required>
+            </div>
+            <div class="input-group">
+                <label>Email Address</label>
+                <input type="email" id="reg-email" placeholder="name@company.com" required>
+            </div>
+            <div class="input-group">
+                <label>Password</label>
+                <input type="password" id="reg-password" placeholder="••••••••" required>
+            </div>
+            <button type="submit">Sign Up</button>
+        </form>
+
+        <div class="auth-footer">
+            Already have an account? <a href="#" onclick="toggleAuth()">Log in</a>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
