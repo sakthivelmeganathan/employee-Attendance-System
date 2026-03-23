@@ -21,6 +21,8 @@ class AttendanceBase(BaseModel):
     check_out: Optional[datetime] = None
     lat: Optional[str] = None
     lon: Optional[str] = None
+    is_out_of_range: bool = False
+    is_late: bool = False
 
 class AttendanceCreate(BaseModel):
     lat: Optional[str] = None
@@ -66,6 +68,7 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: str
+    shift_id: Optional[int] = None
 
 class User(UserBase):
     id: int

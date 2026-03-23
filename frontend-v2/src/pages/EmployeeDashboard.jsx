@@ -28,6 +28,7 @@ const EmployeeDashboard = () => {
         status: 'offline'
     });
     const [attendance, setAttendance] = useState([]);
+    const [fullHistory, setFullHistory] = useState([]);
     const [loading, setLoading] = useState(true);
     const [chartData, setChartData] = useState([]);
 
@@ -80,6 +81,7 @@ const EmployeeDashboard = () => {
                 });
 
                 setAttendance(recentHistory.slice(0, 5));
+                setFullHistory(recentHistory);
 
                 const formattedChart = recentHistory.slice(0, 7).reverse().map(record => ({
                     day: new Date(record.check_in).toLocaleDateString(undefined, { weekday: 'short' }),
@@ -95,6 +97,7 @@ const EmployeeDashboard = () => {
                 ]);
                 setStats(statsRes.data);
                 setAttendance(attendanceRes.data.slice(0, 5));
+                setFullHistory(attendanceRes.data);
 
                 const formattedHistory = attendanceRes.data.slice(0, 7).reverse().map(record => ({
                     day: new Date(record.check_in).toLocaleDateString(undefined, { weekday: 'short' }),
@@ -144,8 +147,19 @@ const EmployeeDashboard = () => {
                     lon: position.coords.longitude.toString()
                 };
             } catch (geoErr) {
-                console.warn('Geolocation failed, proceeding with Unknown:', geoErr);
-                // We proceed even if geo fails, but we've tried.
+                console.warn('Geolocation failed:', geoErr);
+                toast.dismiss(loadingToast);
+                
+                if (geoErr.code === 1) {
+                    toast.error('Location Access Denied. Please enable it in your browser.');
+                } else if (geoErr.code === 2) {
+                    toast.error('please turn on the location in device location');
+                } else if (geoErr.code === 3) {
+                    toast.error('Location Request Timed Out. Please try again.');
+                } else {
+                    toast.error('Could not fetch location. Check-in cancelled.');
+                }
+                return; // CRITICAL: Stop the check-in if location fails
             }
 
             if (isSupabaseConfigured) {
@@ -406,9 +420,11 @@ const EmployeeDashboard = () => {
                     className="space-y-6"
                 >
                     <div className="standard-card">
-                        <div className="card-header flex items-center gap-2">
-                            <History size={18} className="text-primary" />
-                            <h3 className="text-sm font-bold text-text-main uppercase tracking-wider">Recent Logs</h3>
+                        <div className="card-header flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <History size={18} className="text-primary" />
+                                <h3 className="text-sm font-bold text-text-main uppercase tracking-wider">Recent Logs</h3>
+                            </div>
                         </div>
                         <div className="divide-y divide-slate-50">
                             {attendance.length > 0 ? attendance.map((entry, idx) => (
@@ -417,9 +433,21 @@ const EmployeeDashboard = () => {
                                         <span className="text-xs font-bold text-text-main">
                                             {new Date(entry.check_in).toLocaleDateString()}
                                         </span>
-                                        <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded uppercase">
-                                            {entry.status || 'Verified'}
-                                        </span>
+                                        <div className="flex gap-1">
+                                            {entry.is_out_of_range && (
+                                                <span className="text-[9px] font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded uppercase">
+                                                    Out of Range
+                                                </span>
+                                            )}
+                                            {entry.is_late && (
+                                                <span className="text-[9px] font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded uppercase">
+                                                    Late
+                                                </span>
+                                            )}
+                                            <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded uppercase">
+                                                {entry.check_out ? 'Verified' : 'Active'}
+                                            </span>
+                                        </div>
                                     </div>
                                     <div className="flex items-center gap-4">
                                         <div className="flex items-center gap-1.5">
@@ -439,7 +467,7 @@ const EmployeeDashboard = () => {
                                         <div className="flex items-center gap-1 ml-auto">
                                             <MapPin size={10} className="text-indigo-400" />
                                             <span className="text-[9px] font-bold text-text-muted">
-                                                {entry.lat && entry.lon ? `${parseFloat(entry.lat).toFixed(2)}, ${parseFloat(entry.lon).toFixed(2)}` : 'Office'}
+                                                {entry.lat && entry.lon && entry.lat !== 'Unknown' ? `${parseFloat(entry.lat).toFixed(2)}, ${parseFloat(entry.lon).toFixed(2)}` : 'Office'}
                                             </span>
                                         </div>
                                     </div>
@@ -449,6 +477,38 @@ const EmployeeDashboard = () => {
                                     <p className="text-xs text-text-muted font-medium italic">No recent activity found.</p>
                                 </div>
                             )}
+                        </div>
+                    </div>
+
+                    {/* Monthly Heatmap */}
+                    <div className="standard-card p-6">
+                        <div className="flex items-center gap-2 mb-4">
+                            <CheckCircle2 size={18} className="text-primary" />
+                            <h3 className="text-sm font-bold text-text-main uppercase tracking-wider">30-Day Consistency</h3>
+                        </div>
+                        <div className="grid grid-cols-7 gap-2">
+                            {[...Array(30)].map((_, i) => {
+                                const hasData = fullHistory.some(a => {
+                                    const date = new Date(a.check_in);
+                                    const today = new Date();
+                                    today.setDate(today.getDate() - (29 - i));
+                                    return date.toDateString() === today.toDateString();
+                                });
+                                return (
+                                    <div 
+                                        key={i} 
+                                        className={`h-4 rounded-sm ${hasData ? 'bg-primary shadow-sm shadow-indigo-100' : 'bg-slate-100'}`}
+                                        title={new Date(new Date().setDate(new Date().getDate() - (29 - i))).toDateString()}
+                                    />
+                                );
+                            })}
+                        </div>
+                        <div className="mt-4 flex justify-between items-center text-[10px] font-bold text-text-muted uppercase tracking-widest">
+                            <span>Last 30 Days</span>
+                            <div className="flex gap-2">
+                                <div className="flex items-center gap-1"><div className="w-2 h-2 bg-slate-100 rounded-sm"></div> Absent</div>
+                                <div className="flex items-center gap-1"><div className="w-2 h-2 bg-primary rounded-sm"></div> Present</div>
+                            </div>
                         </div>
                     </div>
 

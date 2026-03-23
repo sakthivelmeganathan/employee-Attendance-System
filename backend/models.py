@@ -34,6 +34,8 @@ class Attendance(Base):
     check_out = Column(DateTime, nullable=True)
     lat = Column(String, nullable=True)
     lon = Column(String, nullable=True)
+    is_out_of_range = Column(Boolean, default=False)
+    is_late = Column(Boolean, default=False)
 
     owner = relationship("User", back_populates="attendance")
 

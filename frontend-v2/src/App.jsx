@@ -9,6 +9,7 @@ import Leaves from './pages/Leaves';
 import AdminDashboard from './pages/AdminDashboard';
 import LeaveRequests from './pages/LeaveRequests';
 import Settings from './pages/Settings';
+import ResetPassword from './pages/ResetPassword';
 import Layout from './components/Layout';
 import LoadingScreen from './components/LoadingScreen';
 import { Toaster } from 'sonner';
@@ -91,6 +92,7 @@ function App() {
           <Toaster position="top-right" richColors />
           <Routes>
             <Route path="/login" element={!isAuthenticated ? <Login /> : <Navigate to="/" />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route element={isAuthenticated ? <Layout user={user} /> : <Navigate to="/login" />}>
               <Route path="/" element={
                 user?.is_admin ? <AdminDashboard /> : <EmployeeDashboard />

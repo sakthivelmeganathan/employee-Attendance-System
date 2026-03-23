@@ -209,8 +209,8 @@ const AttendanceHistory = () => {
                                         </span>
                                     </td>
                                     <td className="px-8 py-5">
-                                        <span className={`inline-flex px-2 py-0.5 rounded-md text-[10px] font-bold uppercase ${row.check_out ? 'bg-green-100 text-green-700' : 'bg-indigo-100 text-indigo-700'}`}>
-                                            {row.check_out ? 'Completed' : 'Logged In'}
+                                        <span className={`inline-flex px-2 py-0.5 rounded-md text-[10px] font-bold uppercase ${row.is_out_of_range ? 'bg-red-100 text-red-600' : (row.is_late ? 'bg-orange-100 text-orange-600' : (row.check_out ? 'bg-green-100 text-green-700' : 'bg-indigo-100 text-indigo-700'))}`}>
+                                            {row.is_out_of_range ? 'Out of Range' : (row.is_late ? 'Late' : (row.check_out ? 'Completed' : 'Logged In'))}
                                         </span>
                                     </td>
                                 </motion.tr>

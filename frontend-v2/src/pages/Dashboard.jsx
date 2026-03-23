@@ -53,18 +53,16 @@ const Dashboard = () => {
                 let pos;
                 const loadingToast = toast.loading('Getting precise location...');
                 try {
-                    // Try high accuracy first (Better for mobile)
-                    pos = await getPosition({ enableHighAccuracy: true, timeout: 3000, maximumAge: 30000 });
+                    pos = await getPosition({ enableHighAccuracy: true, timeout: 5000, maximumAge: 0 });
                     toast.dismiss(loadingToast);
                 } catch (gpsError) {
                     toast.dismiss(loadingToast);
-                    // Failover to lower accuracy (Better for desktops/indoor)
-                    if (gpsError.code === 3) { // Timeout
-                        toast.info('Retrying with standard accuracy...');
-                        pos = await getPosition({ enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 });
-                    } else {
-                        throw gpsError;
-                    }
+                    // Do not failover to Unknown. Stop here.
+                    throw gpsError; 
+                }
+
+                if (!pos || !pos.coords || !pos.coords.latitude) {
+                   throw new Error("Could not obtain valid coordinates. Please try again.");
                 }
 
                 await api.post('/attendance/check-in', {
@@ -82,7 +80,9 @@ const Dashboard = () => {
             if (error.code) { // GeolocationPositionError
                 if (error.code === 1) {
                     toast.error('Location Access Denied. Please click the lock icon in the address bar and Allow Location.');
-                } else if (error.code === 2 || error.code === 3) {
+                } else if (error.code === 2) {
+                    toast.error('please turn on the location in device location');
+                } else if (error.code === 3) {
                     toast.error('GPS Signal Timeout. Try moving closer to a window.');
                 }
             } else if (error.response) { // Backend API error
@@ -224,8 +224,8 @@ const Dashboard = () => {
                                 <td className="px-8 py-4 text-sm text-orange-400">{row.check_out ? new Date(row.check_out).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}</td>
                                 <td className="px-8 py-4 text-sm text-text-muted">{row.duration || '--'}</td>
                                 <td className="px-8 py-4">
-                                    <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase ${row.check_out ? 'bg-accent/10 text-accent' : 'bg-primary/10 text-primary'}`}>
-                                        {row.check_out ? 'Completed' : 'Active'}
+                                    <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase ${row.is_out_of_range ? 'bg-red-100 text-red-600' : (row.is_late ? 'bg-orange-100 text-orange-600' : (row.check_out ? 'bg-accent/10 text-accent' : 'bg-primary/10 text-primary'))}`}>
+                                        {row.is_out_of_range ? 'Out of Range' : (row.is_late ? 'Late' : (row.check_out ? 'Completed' : 'Active'))}
                                     </span>
                                 </td>
                             </tr>

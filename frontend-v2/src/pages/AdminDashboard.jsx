@@ -30,13 +30,50 @@ const AdminDashboard = () => {
     const [activeTab, setActiveTab] = useState('attendance');
     const [trend, setTrend] = useState([]);
     const [showAddModal, setShowAddModal] = useState(false);
-    const [newUser, setNewUser] = useState({ full_name: '', email: '', password: '' });
+    const [newUser, setNewUser] = useState({ full_name: '', email: '', password: '', shift_id: '' });
     const [selectedRecord, setSelectedRecord] = useState(null);
     const [showDetailModal, setShowDetailModal] = useState(false);
+    const [availableShifts, setAvailableShifts] = useState([]);
 
     useEffect(() => {
         fetchAdminData();
+        fetchShifts();
     }, []);
+
+    const fetchShifts = async () => {
+        try {
+            if (isSupabaseConfigured()) {
+                const { data, error } = await supabase.from('shifts').select('*').order('name');
+                if (error) throw error;
+                setAvailableShifts(data || []);
+            } else {
+                const { data } = await api.get('/shifts');
+                setAvailableShifts(data);
+            }
+        } catch (err) {
+            console.error('Fetch shifts error:', err);
+        }
+    };
+
+    const handleUpdateShift = async (userId, shiftId) => {
+        try {
+            if (isSupabaseConfigured()) {
+                const { error } = await supabase
+                    .from('profiles')
+                    .update({ shift_id: shiftId || null })
+                    .eq('id', userId);
+                if (error) throw error;
+            } else {
+                await api.patch(`/admin/users/${userId}/shift`, null, {
+                    params: { shift_id: shiftId }
+                });
+            }
+            toast.success('Shift assignment updated.');
+            fetchAdminData();
+        } catch (error) {
+            toast.error('Failed to update shift assignment.');
+        }
+    };
 
     const handleViewDetails = (record) => {
         setSelectedRecord(record);
@@ -155,11 +192,14 @@ const AdminDashboard = () => {
                     { id: data.user.id, full_name: newUser.full_name, email: newUser.email }
                 ]);
             } else {
-                await api.post('/register', newUser);
+                await api.post('/register', {
+                    ...newUser,
+                    shift_id: newUser.shift_id || null
+                });
             }
             toast.success('New employee registered.');
             setShowAddModal(false);
-            setNewUser({ full_name: '', email: '', password: '' });
+            setNewUser({ full_name: '', email: '', password: '', shift_id: '' });
             fetchAdminData();
         } catch (error) {
             toast.error(error.message || 'Registration failed.');
@@ -407,12 +447,18 @@ const AdminDashboard = () => {
                                                         <div className="text-sm font-bold text-orange-500">
                                                             {new Date(row.check_out).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                         </div>
-                                                        <div className="text-[10px] text-text-muted font-medium italic">Verified Session</div>
+                                                        <div className="flex gap-1 mt-1">
+                                                            <div className="text-[10px] text-text-muted font-medium italic">Verified Session</div>
+                                                            {row.is_late && <span className="text-[9px] font-bold text-orange-600 uppercase bg-orange-50 px-1 rounded ml-1">Late</span>}
+                                                        </div>
                                                     </>
                                                 ) : (
-                                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-green-100 text-green-700 animate-pulse">
-                                                        On Duty
-                                                    </span>
+                                                    <div className="flex flex-col gap-1 items-start">
+                                                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${row.is_out_of_range ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'} animate-pulse`}>
+                                                            {row.is_out_of_range ? 'Out of Range' : 'On Duty'}
+                                                        </span>
+                                                        {row.is_late && <span className="text-[9px] font-bold text-orange-600 uppercase bg-orange-50 px-1 rounded ml-1">Late Arrival</span>}
+                                                    </div>
                                                 )}
                                             </td>
                                              <td className="px-8 py-5">
@@ -474,10 +520,16 @@ const AdminDashboard = () => {
                                                 </span>
                                             </td>
                                             <td className="px-8 py-5">
-                                                <div className="flex items-center gap-2">
-                                                    <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
-                                                    <span className="text-xs font-bold text-text-main">Active</span>
-                                                </div>
+                                                <select
+                                                    className="bg-slate-50 border border-slate-200 rounded-lg text-[10px] font-bold uppercase px-2 py-1 outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all cursor-pointer"
+                                                    value={user.shift_id || ''}
+                                                    onChange={(e) => handleUpdateShift(user.id, e.target.value ? parseInt(e.target.value) : null)}
+                                                >
+                                                    <option value="">No Shift</option>
+                                                    {availableShifts.map(s => (
+                                                        <option key={s.id} value={s.id}>{s.name}</option>
+                                                    ))}
+                                                </select>
                                             </td>
                                             <td className="px-8 py-5 text-right whitespace-nowrap">
                                                 <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -580,6 +632,19 @@ const AdminDashboard = () => {
                                         onChange={e => setNewUser({ ...newUser, password: e.target.value })}
                                     />
                                 </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-bold text-text-muted uppercase tracking-widest">Assign Shift (Optional)</label>
+                                    <select
+                                        className="form-input w-full cursor-pointer"
+                                        value={newUser.shift_id}
+                                        onChange={(e) => setNewUser({ ...newUser, shift_id: e.target.value })}
+                                    >
+                                        <option value="">No Shift</option>
+                                        {availableShifts.map(s => (
+                                            <option key={s.id} value={s.id}>{s.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
                                 <button type="submit" className="btn-primary w-full h-12 shadow-lg shadow-indigo-100">
                                     <Shield size={18} />
                                     Finalize Record
@@ -671,6 +736,12 @@ const AdminDashboard = () => {
                                                 <p className="text-xs text-slate-500 font-medium">Lat: <span className="text-slate-700">{selectedRecord.lat || 'N/A'}</span></p>
                                                 <p className="text-xs text-slate-500 font-medium">Lon: <span className="text-slate-700">{selectedRecord.lon || 'N/A'}</span></p>
                                             </div>
+                                            {selectedRecord.is_out_of_range && (
+                                                <p className="text-[10px] font-bold text-red-600 uppercase tracking-widest mt-2 flex items-center gap-1">
+                                                    <AlertCircle size={12} />
+                                                    Warning: User was out of designated perimeter
+                                                </p>
+                                            )}
                                         </div>
                                         <a 
                                             href={`https://www.google.com/maps?q=${selectedRecord.lat},${selectedRecord.lon}`}

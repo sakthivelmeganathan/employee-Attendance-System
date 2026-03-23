@@ -207,6 +207,15 @@ async def toggle_user_role(user_id: int, is_admin: bool, current_user: models.Us
         raise HTTPException(status_code=404, detail="User not found")
     return db_user
 
+@app.patch("/admin/users/{user_id}/shift")
+async def update_user_shift(user_id: int, shift_id: Optional[int] = None, current_user: models.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
+    if not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    db_user = crud.update_user_shift(db, user_id, shift_id)
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return db_user
+
 @app.get("/analytics/stats")
 async def get_stats(current_user: models.User = Depends(auth.get_current_user), db: Session = Depends(database.get_db)):
     score = crud.calculate_punctuality_score(db, current_user.id)
