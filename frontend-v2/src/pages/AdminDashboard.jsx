@@ -181,7 +181,8 @@ const AdminDashboard = () => {
                     email: newUser.email,
                     password: newUser.password,
                     options: {
-                        data: { full_name: newUser.full_name }
+                        data: { full_name: newUser.full_name },
+                        emailRedirectTo: window.location.origin
                     }
                 });
                 if (error) throw error;

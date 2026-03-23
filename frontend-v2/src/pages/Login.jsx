@@ -63,7 +63,8 @@ const Login = () => {
                         email: formData.email,
                         password: formData.password,
                         options: {
-                            data: { full_name: formData.full_name }
+                            data: { full_name: formData.full_name },
+                            emailRedirectTo: window.location.origin
                         }
                     });
                     if (error) throw error;
